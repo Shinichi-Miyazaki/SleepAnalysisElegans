@@ -60,10 +60,10 @@ def lethargus_analyzer(data, body_size):
     data["time_axis(min)"] = [a for a in range(len(data))]
     data = data.set_index(['time_axis(min)'])
 
-    # make boolian array
+    # make boolean array
     # if the activity > 1% of the body, Wake
     Wake_sleep_boolean = data<body_size/100
-    Wake_sleep_boolean.to_csv('./Wake_sleep_boolian.csv')
+    Wake_sleep_boolean.to_csv('./Wake_sleep_boolean.csv')
 
     # calculate FoQ
     FoQ_data = Wake_sleep_boolean.rolling(300, min_periods=1, center=True).mean()
@@ -79,10 +79,10 @@ def lethargus_analyzer(data, body_size):
         plt.show()
 
     # detect lethargus
-    # for searching letahrgus enter and end, make boolian array
+    # for searching letahrgus enter and end, make boolean array
     # if the FoQ > 0.05 True, if not False
     lethargus_judge_boolean = FoQ_data>0.05
-    lethargus_judge_boolean.to_csv('./Lethargus_judge_boolian.csv')
+    lethargus_judge_boolean.to_csv('./Lethargus_judge_boolean.csv')
 
     max_start, max_length, all_start, all_length = maxisland_start_len_mask(lethargus_judge_boolean)
 
@@ -98,13 +98,15 @@ def lethargus_analyzer(data, body_size):
 
     def each_column_analysis():
         # Q_durations is all the quiescent bouts
-        columnnames = ['bodysize', 'FoQ_during_Lethargus', 'FoQ_out',
+        column_name = ['bodysize', 'FoQ_during_Lethargus', 'FoQ_out',
                        'duration (hr)', 'interpletation 0 is adequate',
                        'Mean Quiescent Bout (sec)', 'Mean Active Bout (sec)',
                        'Transitions (/hr)', "Total Q (sec)", "Total A (sec)"]
         result = []
         column_num = data.shape[0]
         row_num = data.shape[1]
+
+        lethargus_dataframe = pd.DataFrame()
 
         for i in range(row_num):
             num = i + 1
@@ -147,9 +149,8 @@ def lethargus_analyzer(data, body_size):
                 judge = "applicable for lethargus analysis"
                 # extract from 1hour before lethargus to the end
                 LeFoQdf = temp_foq[max_start[i] - 1800:]
-                LeFoQdf.to_csv('./LeFoQdf_worm{}.csv'.format(num))
+                lethargus_dataframe = pd.concat([lethargus_dataframe, LeFoQdf], axis=1)
 
-                #
                 q_starts_index = np.where((Sleep_bout_starts - column_num * i > max_start[i]) \
                                           & (Sleep_bout_starts - column_num * i < max_q_end))
                 a_starts_index = np.where((Wake_bout_starts - column_num * i > max_start[i]) \
@@ -201,8 +202,9 @@ def lethargus_analyzer(data, body_size):
                                     total_a])
             result.append(temp_result)
         result_df = pd.DataFrame(result, index=["worm" + str(i+1) for i in range(row_num)],
-                                 columns=columnnames)
+                                 columns=column_name)
         result_df.to_csv('./result_summary.csv')
+        lethargus_dataframe.to_csv('./lethargus_dataframe.csv')
 
     each_column_analysis()
 
