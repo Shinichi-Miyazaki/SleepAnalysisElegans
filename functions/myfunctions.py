@@ -149,7 +149,7 @@ def lethargus_analyzer(data, body_size):
                 judge = "applicable for lethargus analysis"
                 # extract from 1hour before lethargus to the end
                 LeFoQdf = temp_foq[max_start[i] - 1800:]
-                lethargus_dataframe = pd.concat([lethargus_dataframe, LeFoQdf], axis=1)
+                lethargus_dataframe = pd.concat([lethargus_dataframe, LeFoQdf.reset_index().iloc[:, 1]], axis=1)
 
                 q_starts_index = np.where((Sleep_bout_starts - column_num * i > max_start[i]) \
                                           & (Sleep_bout_starts - column_num * i < max_q_end))
@@ -162,7 +162,7 @@ def lethargus_analyzer(data, body_size):
                 q_durations_lethargus = Sleep_bout_durations[q_starts_index]
                 total_q = np.sum(q_durations_lethargus) * 2
                 # calculate total A
-                a_durations_lethargus = Wake_bout_durations[a_starts_index]
+                a_durations_lethargus = Wake_bout_durations[a_starts_index][:-1]
                 total_a = np.sum(a_durations_lethargus) * 2
                 # calculate mean Q
                 mean_q_duration = np.mean(q_durations_lethargus) * 2
