@@ -57,7 +57,7 @@ def lethargus_analyzer(data, body_size):
     data.columns = ["worm" + str(i+1) for i in range(data.shape[1])]
 
     # make time axis
-    data["time_axis(min)"] = [a for a in range(len(data))]
+    data["time_axis(min)"] = [a/30 for a in range(len(data))]
     data = data.set_index(['time_axis(min)'])
 
     # make boolean array
@@ -74,7 +74,7 @@ def lethargus_analyzer(data, body_size):
     os.makedirs("./figures", exist_ok=True)
     for k in FoQ_data.columns:
         plt.figure()
-        FoQ_data[k].plot.line(style="k")
+        FoQ_data[k].plot(ylim=[0,1], colormap = "gray")
         plt.savefig('./figures/{}.png'.format(k))
         plt.show()
 
@@ -126,9 +126,9 @@ def lethargus_analyzer(data, body_size):
             # tempFoQ is FoQ series of current chamber
             temp_foq = FoQ_data.iloc[:, i]
             # calculate average FOQ during lethargus
-            foq_mean = sum(temp_foq[max_start[i]:max_q_end])/max_length[i]
+            foq_mean = temp_foq.iloc[max_start[i]:max_q_end].mean()
             # calculate average FoQ out of lethargus
-            foq_out = sum(temp_foq[max_q_end:max_q_out])/ out_duration
+            foq_out = temp_foq.iloc[max_q_end:max_q_out].mean()
             # calculate lethargus length
             lethargus_length = max_length[i] / 1800
 
@@ -148,7 +148,7 @@ def lethargus_analyzer(data, body_size):
             else:
                 judge = "applicable for lethargus analysis"
                 # extract from 1hour before lethargus to the end
-                LeFoQdf = temp_foq[max_start[i] - 1800:]
+                LeFoQdf = temp_foq.iloc[max_start[i] - 1800:]
                 lethargus_dataframe = pd.concat([lethargus_dataframe, LeFoQdf.reset_index().iloc[:, 1]], axis=1)
 
                 q_starts_index = np.where((Sleep_bout_starts - column_num * i > max_start[i]) \
@@ -185,6 +185,8 @@ def lethargus_analyzer(data, body_size):
                 # if A is more than Q, A is deleted
                 if len(a_durations_lethargus) > len(q_durations_lethargus):
                     a_durations_lethargus = a_durations_lethargus[:-1]
+                if len(a_durations_lethargus) < len(q_durations_lethargus):
+                    q_durations_lethargus = q_durations_lethargus[:-1]
                 Lethargus_QandA = np.stack((a_durations_lethargus,
                                             q_durations_lethargus), 1)
 
