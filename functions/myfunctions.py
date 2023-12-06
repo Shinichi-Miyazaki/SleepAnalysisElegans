@@ -99,9 +99,9 @@ def lethargus_analyzer(data, body_size):
     def each_column_analysis():
         # Q_durations is all the quiescent bouts
         column_name = ['bodysize', 'FoQ_during_Lethargus', 'FoQ_out',
-                       'duration (hr)', 'interpletation 0 is adequate',
-                       'Mean Quiescent Bout (sec)', 'Mean Active Bout (sec)',
-                       'Transitions (/hr)', "Total Q (sec)", "Total A (sec)"]
+                       'duration(hr)', 'interpletation',
+                       'MeanQBout(sec)', 'MeanABout(sec)',
+                       'Transitions(/hr)', "TotalQ(sec)", "TotalA(sec)"]
         result = []
         column_num = data.shape[0]
         row_num = data.shape[1]
@@ -138,15 +138,15 @@ def lethargus_analyzer(data, body_size):
 
             # check start point & end point
             if quiescent_island_num > 1:
-                judge = "multiple quiescent islands"
+                judge = "multipleLethargus"
             elif quiescent_island_num == 0:
-                judge = "there is no lethargus period"
+                judge = "Nolethargus"
             elif max_start[i] < 1800:
-                judge = "Lethargus start within first 1 hour"
+                judge = "LethargusStartWithinOneHour"
             elif max_q_end > column_num - 900:
-                judge = "Lethargus did not end"
+                judge = "LethargusNotEnd"
             else:
-                judge = "applicable for lethargus analysis"
+                judge = "Applicable"
                 # extract from 1hour before lethargus to the end
                 LeFoQdf = temp_foq.iloc[max_start[i] - 1800:]
                 lethargus_dataframe = pd.concat([lethargus_dataframe, LeFoQdf.reset_index().iloc[:, 1]], axis=1)
