@@ -190,7 +190,7 @@ def lethargus_analyzer(analysis_res_df, body_size):
 
     # make time axis
     analysis_res_df["time_axis(min)"] = [sec / (60/time_interval) for sec in range(len(analysis_res_df))]
-    #analysis_res_df = analysis_res_df.set_index(['time_axis(min)'])
+    analysis_res_df = analysis_res_df.set_index(['time_axis(min)'])
 
     # make boolean array
     # if the activity > 1% of the body, Wake
@@ -202,7 +202,7 @@ def lethargus_analyzer(analysis_res_df, body_size):
     FoQ_raw.to_csv('./FoQ_data.csv')
 
     # Make FoQ figures each plot without timeaxis plot
-    for k in FoQ_raw[:-1].columns:
+    for k in FoQ_raw.columns:
         plt.figure()
         FoQ_raw[k].plot(ylim=[0,1], colormap = "gray")
         plt.savefig('./figures/{}.png'.format(k))
@@ -217,16 +217,17 @@ def lethargus_analyzer(analysis_res_df, body_size):
                              tight_layout=True,
                              facecolor="whitesmoke")
 
-    for fig_num in range(len(FoQ_raw.columns)):
-        temp_row = fig_num // fig_cnum
-        temp_col = fig_num % fig_cnum
-        axes[temp_row, temp_col].plot(analysis_res_df["time_axis(min)"],
-                                      FoQ_raw.iloc[:, fig_num],
-                                      color = "black")
-        axes[temp_row, temp_col].set_ylim(0, 1)
-    plt.savefig('./figures/summary.png')
-    plt.clf()
-    plt.close()
+    if len(FoQ_raw.columns) > 1:
+        for fig_num in range(len(FoQ_raw.columns)):
+            temp_row = fig_num // fig_cnum
+            temp_col = fig_num % fig_cnum
+            axes[temp_row, temp_col].plot(FoQ_raw.index,
+                                          FoQ_raw.iloc[:, fig_num],
+                                          color = "black")
+            axes[temp_row, temp_col].set_ylim(0, 1)
+        plt.savefig('./figures/summary.png')
+        plt.clf()
+        plt.close()
 
     # detect lethargus
     # for searching letahrgus enter and end, make boolean array
