@@ -65,6 +65,16 @@ def each_column_analysis(analysis_res_df,
                          DTS_boolean,
                          Wake_sleep_boolean,
                          body_size):
+    """[summary]
+
+    Args:
+        analysis_res_df (TYPE): [description]
+        FoQ_raw (TYPE): [description]
+        DTS_boolean (TYPE): [description]
+        Wake_sleep_boolean (TYPE): [description]
+        body_size (TYPE): [description]
+    """
+    # lethargus bout analysis
     max_start, max_length, all_start, all_length = maxisland_start_len_mask(DTS_boolean)
     # quiescent bout analysis
     _, _, Sleep_bout_starts, Sleep_bout_durations = maxisland_start_len_mask(Wake_sleep_boolean)
