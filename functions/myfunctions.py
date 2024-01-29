@@ -18,7 +18,6 @@ import seaborn
 out_duration = 300
 time_interval = 2
 seaborn.set_style(style="ticks")
-fig_cnum = 4
 
 # lethargus analyzer
 def maxisland_start_len_mask(boolean_array, fillna_index=-1, fillna_len=0):
@@ -83,7 +82,7 @@ def each_column_analysis(analysis_res_df,
     _, _, Wake_bout_starts, Wake_bout_durations = maxisland_start_len_mask(~Wake_sleep_boolean)
 
     column_name = ['bodysize', 'FoQ_during_DTS', 'FoQ_out',
-                   'duration(hr)', 'interpletation',
+                   'duration(hr)', 'interpretation',
                    'MeanSleepBout(sec)', 'MeanAwakeBout(sec)',
                    'Transitions(/hr)', "TotalQ(sec)", "TotalA(sec)"]
     result = []
@@ -122,14 +121,14 @@ def each_column_analysis(analysis_res_df,
             judge = "Multiple_DTS"
         elif quiescent_island_num == 0:
             judge = "No_DTS"
-        elif max_start[i] < 1800:
-            judge = "DTS_Start_Within_1Hour"
+        elif max_start[i] < 900:
+            judge = "DTS_Start_Within_30min"
         elif max_q_end > column_num - 900:
             judge = "DTS_not_end"
         else:
             judge = "Applicable"
-            # extract from 1hour before lethargus to the end
-            LeFoQdf = temp_foq.iloc[max_start[i] - 1800:]
+            # extract from  30 min before lethargus to the end
+            LeFoQdf = temp_foq.iloc[max_start[i] - 900:]
             DTS_df = pd.concat([DTS_df, LeFoQdf.reset_index().iloc[:, 1]], axis=1)
 
             q_starts_index = np.where((Sleep_bout_starts - column_num * i > max_start[i]) \
@@ -179,6 +178,18 @@ def each_column_analysis(analysis_res_df,
                 ex_Leth_QandA = pd.DataFrame(ex_Leth_QandA, columns=["A", "Q"])
                 ex_Leth_QandA.to_csv("./subdivided/worm{0}/leth_{1}.csv".format(num, j))
 
+            # make DTS boolean dataframe
+            # DTS booleanのmax_startからmax_q_endまでの間をTrueにする 他はFALSEにする
+            DTS_boolean["DTS_mask"] = 0
+            DTS_boolean["DTS_mask"].iloc[max_start[i]:max_q_end] = 1
+            DTS_boolean["Before_DTS_mask"] = 0
+            DTS_boolean["Before_DTS_mask"].iloc[max_start[i]-300:max_start[i]] = 1
+            DTS_boolean["After_DTS_mask"] = 0
+            DTS_boolean["After_DTS_mask"].iloc[max_q_end:max_q_end + 300] = 1
+            DTS_boolean.to_csv("./subdivided/worm{0}/DTS_mask.csv".format(num))
+
+
+
         temp_result = np.array([body_size, foq_mean, foq_out,
                                 lethargus_length, judge, mean_q_duration,
                                 mean_a_duration, transitions, total_q,
@@ -187,9 +198,9 @@ def each_column_analysis(analysis_res_df,
     result_df = pd.DataFrame(result, index=["worm" + str(i+1) for i in range(row_num)],
                              columns=column_name)
     result_df.to_csv('./result_summary.csv')
-    DTS_df.to_csv('./lethargus_dataframe.csv')
+    DTS_df.to_csv('./Lethargus_dataframe.csv')
 
-def lethargus_analyzer(analysis_res_df, body_size):
+def lethargus_analyzer(analysis_res_df, body_size, fig_rnum, fig_cnum):
     # make result folder
     os.makedirs("./results", exist_ok=True)
     os.chdir("./results")
@@ -243,7 +254,6 @@ def lethargus_analyzer(analysis_res_df, body_size):
     # for searching letahrgus enter and end, make boolean array
     # if the FoQ > 0.05 True, if not False
     DTS_boolean = FoQ_raw>0.05
-    # DTS_boolean.to_csv('./DTS_boolean.csv')
 
     each_column_analysis(analysis_res_df,
                          FoQ_raw,

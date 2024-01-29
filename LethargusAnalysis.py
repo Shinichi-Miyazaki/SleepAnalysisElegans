@@ -22,9 +22,11 @@ def main():
     data = pd.read_csv(filepath)
     row_number = data.shape[1]
     body_size = int(input('bodysize (pixel) を入力 : '))
+    fig_rnum = int(input('ウェル数 (縦) を入力 : '))
+    fig_cnum = int(input('ウェル数 (横) を入力 : '))
 
     # Lethargus analysis
-    lethargus_analyzer(data, body_size)
+    lethargus_analyzer(data, body_size, fig_rnum, fig_cnum)
 
 if __name__ == '__main__':
     main()
