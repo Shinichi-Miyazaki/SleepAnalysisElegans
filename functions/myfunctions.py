@@ -81,10 +81,10 @@ def each_column_analysis(analysis_res_df,
     # wake bout analysis
     _, _, Wake_bout_starts, Wake_bout_durations = maxisland_start_len_mask(~Wake_sleep_boolean)
 
-    column_name = ['bodysize', 'FoQ_during_DTS', 'FoQ_out',
-                   'duration(hr)', 'interpretation',
-                   'MeanSleepBout(sec)', 'MeanAwakeBout(sec)',
-                   'Transitions(/hr)', "TotalQ(sec)", "TotalA(sec)"]
+    column_name = ['bodysize_pixel', 'FoQ_during_DTS_arb', 'FoQ_out_arb',
+                   'duration_hour', 'interpretation',
+                   'MeanSleepBout_sec', 'MeanAwakeBout_sec',
+                   'Transitions_/hour', "TotalQ_sec", "TotalA_sec"]
     result = []
     column_num, row_num = analysis_res_df.shape
     DTS_df = pd.DataFrame()
