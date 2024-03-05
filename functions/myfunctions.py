@@ -14,9 +14,20 @@ import itertools
 import seaborn
 
 # parameters
-# out of lethargus = 5 minutes after lethargus end
-out_duration = 300
-time_interval = 2
+# imaging_interval (sec)
+imaging_interval = 2 # (sec)
+image_num_per_hour = int(3600 / imaging_interval)
+# if DTS starts within 30 min, it is not used for analysis
+margin_image_num = int(1800 / imaging_interval)
+# The definition of out of DTS is 10 min after DTS end
+out_DTS_duration = 600 # (sec)
+out_DTS_image_num = int(out_DTS_duration / imaging_interval)
+# Time window of rolling average
+rolling_window_duration = 10 # (sec)
+rolling_window_image_num = int(rolling_window_duration / imaging_interval)
+# threshold of FoQ
+FoQ_threshold = 0.05
+
 seaborn.set_style(style="ticks")
 
 # lethargus analyzer
@@ -97,12 +108,12 @@ def each_column_analysis(analysis_res_df,
         # quiescent island length
         quiescent_lengths = all_length[temp_area_indices]
         # count only the islands which is longer than 1hour
-        quiescent_island_num = np.count_nonzero(quiescent_lengths > 1800)
+        quiescent_island_num = np.count_nonzero(quiescent_lengths > image_num_per_hour)
 
         # max island (= lethargus) end
         max_q_end = max_start[i] + max_length[i]
         # out of lethargus (5 min after lethargus end)
-        max_q_out = max_q_end + out_duration
+        max_q_out = max_q_end + out_DTS_image_num
         # tempFoQ is FoQ series of current chamber
         temp_foq = FoQ_raw.iloc[:, i]
         # calculate average FOQ during lethargus
@@ -110,7 +121,7 @@ def each_column_analysis(analysis_res_df,
         # calculate average FoQ out of lethargus
         foq_out = temp_foq.iloc[max_q_end:max_q_out].mean()
         # calculate lethargus length
-        lethargus_length = max_length[i] / 1800
+        lethargus_length = max_length[i] / image_num_per_hour
 
         # init value
         judge, mean_q_duration, mean_a_duration, transitions, \
@@ -121,14 +132,14 @@ def each_column_analysis(analysis_res_df,
             judge = "Multiple_DTS"
         elif quiescent_island_num == 0:
             judge = "No_DTS"
-        elif max_start[i] < 900:
+        elif max_start[i] < margin_image_num:
             judge = "DTS_Start_Within_30min"
-        elif max_q_end > column_num - 900:
+        elif max_q_end > column_num - margin_image_num:
             judge = "DTS_not_end"
         else:
             judge = "Applicable"
             # extract from  30 min before lethargus to the end
-            LeFoQdf = temp_foq.iloc[max_start[i] - 900:]
+            LeFoQdf = temp_foq.iloc[max_start[i] - margin_image_num:]
             DTS_df = pd.concat([DTS_df, LeFoQdf.reset_index().iloc[:, 1]], axis=1)
 
             q_starts_index = np.where((Sleep_bout_starts - column_num * i > max_start[i]) \
@@ -210,7 +221,7 @@ def lethargus_analyzer(analysis_res_df, body_size, fig_rnum, fig_cnum):
     analysis_res_df.columns = ["worm" + str(i + 1) for i in range(analysis_res_df.shape[1])]
 
     # make time axis
-    analysis_res_df["time_axis(min)"] = [sec / (60/time_interval) for sec in range(len(analysis_res_df))]
+    analysis_res_df["time_axis(min)"] = [sec / (60 / imaging_interval) for sec in range(len(analysis_res_df))]
     analysis_res_df = analysis_res_df.set_index(['time_axis(min)'])
 
     # make boolean array
@@ -219,7 +230,7 @@ def lethargus_analyzer(analysis_res_df, body_size, fig_rnum, fig_cnum):
     Wake_sleep_boolean.to_csv('./Wake_sleep_boolean.csv')
 
     # calculate FoQ
-    FoQ_raw = Wake_sleep_boolean.rolling(int(600/time_interval), min_periods=1, center=True).mean()
+    FoQ_raw = Wake_sleep_boolean.rolling(int(rolling_window_image_num), min_periods=1, center=True).mean()
     FoQ_raw.to_csv('./FoQ_data.csv')
 
     # Make FoQ figures each plot without timeaxis plot
@@ -253,7 +264,7 @@ def lethargus_analyzer(analysis_res_df, body_size, fig_rnum, fig_cnum):
     # detect lethargus
     # for searching letahrgus enter and end, make boolean array
     # if the FoQ > 0.05 True, if not False
-    DTS_boolean = FoQ_raw>0.05
+    DTS_boolean = FoQ_raw>FoQ_threshold
 
     each_column_analysis(analysis_res_df,
                          FoQ_raw,
