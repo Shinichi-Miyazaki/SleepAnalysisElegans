@@ -23,7 +23,7 @@ margin_image_num = int(1800 / imaging_interval)
 out_DTS_duration = 600 # (sec)
 out_DTS_image_num = int(out_DTS_duration / imaging_interval)
 # Time window of rolling average
-rolling_window_duration = 10 # (sec)
+rolling_window_duration = 600 # (sec)
 rolling_window_image_num = int(rolling_window_duration / imaging_interval)
 # threshold of FoQ
 FoQ_threshold = 0.05
@@ -248,6 +248,7 @@ def lethargus_analyzer(analysis_res_df, body_size, fig_rnum, fig_cnum):
                                       fig_rnum * 2),
                              tight_layout=True,
                              facecolor="whitesmoke")
+    # todo: 1行もしくは1列の場合、以下でエラーがでる。axesが1次元配列になるため, 次のfor loop内のaxesが2次元配列にならず、indexerrorがでる。
 
     if len(FoQ_raw.columns) > 1:
         for fig_num in range(len(FoQ_raw.columns)):
