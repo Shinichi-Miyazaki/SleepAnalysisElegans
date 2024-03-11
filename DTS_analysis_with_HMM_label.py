@@ -166,13 +166,44 @@ def main():
     root = tkinter.Tk()
     root.withdraw()
     body_size = int(input('bodysize (pixel) を入力 : '))
+    filepath = tkinter.filedialog.askopenfilename()
+    os.chdir(os.path.dirname(filepath))
 
-    analysis_res_path = tkinter.filedialog.askopenfilename("select analysis result")
-    analysis_res_df = pd.read_csv(analysis_res_path)
-    FoQ_raw_path = tkinter.filedialog.askopenfilename("select FoQ raw data")
-    FoQ_raw = pd.read_csv(FoQ_raw_path)
-    DTS_boolean_path = tkinter.filedialog.askopenfilename("select DTS boolean")
-    DTS_boolean = pd.read_csv(DTS_boolean_path)
+    DTS_mask_path = tkinter.filedialog.askopenfilename("select DTS mask")
+    DTS_mask = pd.read_csv(DTS_mask_path)
+
+    analysis_res_df = pd.read_csv(filepath)
+
+    # make result folder
+    os.makedirs("./results", exist_ok=True)
+    os.chdir("./results")
+    os.makedirs("./figures", exist_ok=True)
+
+    # Make column names
+    analysis_res_df.columns = ["worm" + str(i + 1) for i in range(analysis_res_df.shape[1])]
+
+    # make time axis
+    analysis_res_df["time_axis(min)"] = [sec / (60 / imaging_interval) for sec in range(len(analysis_res_df))]
+    analysis_res_df = analysis_res_df.set_index(['time_axis(min)'])
+
+    # make boolean array
+    # if the activity > 1% of the body, Wake
+    Wake_sleep_boolean = analysis_res_df < body_size / 100
+    Wake_sleep_boolean.to_csv('./Wake_sleep_boolean.csv')
+
+    # calculate FoQ
+    FoQ_raw = Wake_sleep_boolean.rolling(int(rolling_window_image_num), min_periods=1, center=True).mean()
+    FoQ_raw.to_csv('./FoQ_data.csv')
+
+    # detect lethargus
+    # for searching letahrgus enter and end, make boolean array
+    # if the FoQ > 0.05 True, if not False
+    DTS_boolean = FoQ_raw > FoQ_threshold
+
+    # todo: DTS maskを作って、それを使ってDTSの前後のデータを抽出する
+    analysis_res_df = analysis_res_df[DTS_mask["DTS_mask"] == 1]
+    FoQ_raw = FoQ_raw[DTS_mask["DTS_mask"] == 1]
+    DTS_boolean = DTS_boolean[DTS_mask["DTS_mask"] == 1]
     HMM_label_path = tkinter.filedialog.askopenfilename("select HMM label")
     HMM_label = pd.read_csv(HMM_label_path)
 
