@@ -33,17 +33,12 @@ seaborn.set_style(style="ticks")
 # lethargus analyzer
 def maxisland_start_len_mask(boolean_array, fillna_index=-1, fillna_len=0):
     """detect sequential TRUEs which is named as island.
-
-    Args:
-        boolean_array:
-        fillna_index:
-        fillna_len:
-
-    Returns:
-
     """
-
-    pad = np.zeros(boolean_array.shape[1], dtype=bool)
+    if boolean_array.ndim != 2:
+        pad_size = 1
+    else:
+        pad_size = boolean_array.shape[1]
+    pad = np.zeros(pad_size, dtype=bool)
     mask = np.vstack((pad, boolean_array, pad))
 
     mask_step = mask[1:] != mask[:-1]

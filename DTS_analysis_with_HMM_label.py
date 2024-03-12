@@ -165,26 +165,24 @@ def main():
     # select file
     root = tkinter.Tk()
     root.withdraw()
-    body_size = int(input('bodysize (pixel) を入力 : '))
+    body_size = 100 # int(input('bodysize (pixel) を入力 : '))
+    print("select area and DTS mask csv file")
     filepath = tkinter.filedialog.askopenfilename()
     os.chdir(os.path.dirname(filepath))
 
-    DTS_mask_path = tkinter.filedialog.askopenfilename("select DTS mask")
-    DTS_mask = pd.read_csv(DTS_mask_path)
-
-    analysis_res_df = pd.read_csv(filepath)
+    analysis_res_df = pd.read_csv(filepath)["Area"]
+    DTS_mask = pd.read_csv(filepath)["DTS_mask"]
 
     # make result folder
     os.makedirs("./results", exist_ok=True)
     os.chdir("./results")
     os.makedirs("./figures", exist_ok=True)
 
-    # Make column names
-    analysis_res_df.columns = ["worm" + str(i + 1) for i in range(analysis_res_df.shape[1])]
-
     # make time axis
-    analysis_res_df["time_axis(min)"] = [sec / (60 / imaging_interval) for sec in range(len(analysis_res_df))]
-    analysis_res_df = analysis_res_df.set_index(['time_axis(min)'])
+    timeaxis = pd.Series([sec / (60 / imaging_interval) for sec in range(len(analysis_res_df))])
+    analysis_res_df = pd.concat([timeaxis, analysis_res_df], axis=1)
+    analysis_res_df.columns = ["time_axis(min)", "worm1"]
+    analysis_res_df = analysis_res_df.set_index("time_axis(min)")
 
     # make boolean array
     # if the activity > 1% of the body, Wake
@@ -200,12 +198,12 @@ def main():
     # if the FoQ > 0.05 True, if not False
     DTS_boolean = FoQ_raw > FoQ_threshold
 
-    # todo: DTS maskを作って、それを使ってDTSの前後のデータを抽出する
-    analysis_res_df = analysis_res_df[DTS_mask["DTS_mask"] == 1]
-    FoQ_raw = FoQ_raw[DTS_mask["DTS_mask"] == 1]
-    DTS_boolean = DTS_boolean[DTS_mask["DTS_mask"] == 1]
-    HMM_label_path = tkinter.filedialog.askopenfilename("select HMM label")
-    HMM_label = pd.read_csv(HMM_label_path)
+    print("select HMM label csv file")
+    HMM_label_path = tkinter.filedialog.askopenfilename()
+    HMM_label = pd.read_csv(HMM_label_path)["state"]
+    HMM_label = pd.concat([timeaxis, HMM_label], axis=1)
+    HMM_label.columns = ["time_axis(min)", "state"]
+    HMM_label = HMM_label.set_index("time_axis(min)")
 
     # Lethargus analysis
     DTS_analysis_with_HMM_label(analysis_res_df,
