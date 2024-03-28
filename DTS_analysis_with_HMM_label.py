@@ -36,10 +36,10 @@ def DTS_analysis_with_HMM_label(analysis_res_df,
     # lethargus bout analysis
     max_start, max_length, all_start, all_length = maxisland_start_len_mask(DTS_boolean)
     # quiescent bout analysis
-    _, _, Sleep_bout_starts, Sleep_bout_durations = maxisland_start_len_mask(HMM_label)
+    _, _, Sleep_bout_starts, Sleep_bout_durations = maxisland_start_len_mask(HMM_label.values)
 
     # wake bout analysis
-    _, _, Wake_bout_starts, Wake_bout_durations = maxisland_start_len_mask(~HMM_label)
+    _, _, Wake_bout_starts, Wake_bout_durations = maxisland_start_len_mask(-(HMM_label.values-1))
 
     column_name = ['bodysize_pixel', 'FoQ_during_DTS_arb', 'FoQ_out_arb',
                    'duration_hour', 'interpretation',
