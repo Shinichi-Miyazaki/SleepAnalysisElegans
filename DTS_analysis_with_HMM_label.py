@@ -200,7 +200,7 @@ def main():
 
     print("select HMM label csv file")
     HMM_label_path = tkinter.filedialog.askopenfilename()
-    HMM_label = pd.read_csv(HMM_label_path)["state"]
+    HMM_label = pd.read_csv(HMM_label_path)["state_mod"]
     HMM_label = pd.concat([timeaxis, HMM_label], axis=1)
     HMM_label.columns = ["time_axis(min)", "state"]
     HMM_label = HMM_label.set_index("time_axis(min)")

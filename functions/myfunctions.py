@@ -221,6 +221,7 @@ def lethargus_analyzer(analysis_res_df, body_size, fig_rnum, fig_cnum):
 
     # make boolean array
     # if the activity > 1% of the body, Wake
+    # wake = 0, sleep = 1
     Wake_sleep_boolean = analysis_res_df < body_size / 100
     Wake_sleep_boolean.to_csv('./Wake_sleep_boolean.csv')
 
