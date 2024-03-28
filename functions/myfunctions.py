@@ -242,9 +242,10 @@ def lethargus_analyzer(analysis_res_df, body_size, fig_rnum, fig_cnum):
                              figsize=(fig_cnum * 2,
                                       fig_rnum * 2),
                              tight_layout=True,
-                             facecolor="whitesmoke")
-    # todo: 1行もしくは1列の場合、以下でエラーがでる。axesが1次元配列になるため, 次のfor loop内のaxesが2次元配列にならず、indexerrorがでる。
+                             facecolor="whitesmoke",
+                             squeeze=False)
 
+    # if the number of rows is  more than 1, make 2 dimentinal subplot
     if len(FoQ_raw.columns) > 1:
         for fig_num in range(len(FoQ_raw.columns)):
             temp_row = fig_num // fig_cnum
